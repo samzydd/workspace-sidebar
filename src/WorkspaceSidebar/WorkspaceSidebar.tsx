@@ -11,7 +11,7 @@
  * and row starts neutral, so it's a blank surface to click around in.
  *
  *   Collapsed utility rail (56, always visible)   Drawer (336, slides in/out)
- *   ├─ Product mark (sparkles)                    ├─ SidebarHeader type="workspace"
+ *   ├─ Sakani logo (brand mark)                   ├─ SidebarHeader type="workspace"
  *   ├─ Divider                                    ├─ SidebarSearch type="command"
  *   ├─ SidebarItem collapsed ×8 (click → active)   ├─ primary nav — SidebarItem ×4
  *   └─ IconButton ghost ×3, Divider, Avatar        ├─ SidebarDivider
@@ -24,9 +24,16 @@
  *                                                  └─ SidebarFooter type="user-menu"
  *
  * Group headers are SidebarItem with `hasSubmenu` + `expanded`; clicking one
- * shows or hides its rows. The rows are not a library component in Figma
- * (plain "Navigation item" frames: 27px, 12px label, 16px left inset, optional
- * 6px status dot and a Badge count), so they live here as NavRow.
+ * reveals or hides its rows with an Accordion-style grid-rows animation
+ * (0fr -> 1fr, plus a short fade/rise on the rows themselves) — every group
+ * starts closed. The rows are not a library component in Figma (plain
+ * "Navigation item" frames: 27px, 12px label, 16px left inset, optional 6px
+ * status dot and a Badge count), so they live here as NavRow.
+ *
+ * Every collapsed rail item is wrapped in the system Tooltip (pointer
+ * "center-right", since the rail sits flush on the left edge) with
+ * `nativeTooltip={false}` on the SidebarItems so the browser's native title
+ * tooltip doesn't also fire.
  */
 
 import React from 'react';
@@ -38,7 +45,7 @@ import {
 } from 'lucide-react';
 import {
   Avatar, Badge, Divider, HoverGroup, IconButton, SidebarDivider, SidebarFooter,
-  SidebarGroupLabel, SidebarHeader, SidebarItem, SidebarPromo, SidebarSearch,
+  SidebarGroupLabel, SidebarHeader, SidebarItem, SidebarPromo, SidebarSearch, Tooltip,
 } from '@sakaniui/react';
 import { WorkspaceLogo } from './WorkspaceLogo';
 import styles from './WorkspaceSidebar.module.css';
@@ -70,38 +77,37 @@ const PRIMARY_NAV: Array<{ icon: LucideIcon; label: string; badge?: string }> = 
 ];
 
 interface Row { label: string; count?: string; dot?: boolean }
-interface Group { id: string; icon: LucideIcon; label: string; open: boolean; rows: Row[] }
+interface Group { id: string; icon: LucideIcon; label: string; rows: Row[] }
 
 const WORKSPACE_GROUPS: Group[] = [
-  { id: 'projects', icon: FolderKanban, label: 'Projects', open: true, rows: [
+  { id: 'projects', icon: FolderKanban, label: 'Projects', rows: [
     { label: 'Active projects', count: '6' }, { label: 'Templates' }, { label: 'Archive' },
   ] },
-  { id: 'tasks', icon: SquareCheckBig, label: 'Tasks', open: true, rows: [
+  { id: 'tasks', icon: SquareCheckBig, label: 'Tasks', rows: [
     { label: 'My tasks', count: '8', dot: true },
     { label: 'Assigned to me', count: '14', dot: true },
     { label: 'Priorities', count: '3', dot: true },
     { label: 'Completed', dot: true },
   ] },
-  { id: 'views', icon: LayoutDashboard, label: 'Views', open: true, rows: [
+  { id: 'views', icon: LayoutDashboard, label: 'Views', rows: [
     { label: 'Board' }, { label: 'List' }, { label: 'Calendar' },
   ] },
-  { id: 'teams', icon: Users, label: 'Teams', open: true, rows: [
+  { id: 'teams', icon: Users, label: 'Teams', rows: [
     { label: 'Design', count: '8' }, { label: 'Engineering', count: '12' }, { label: 'Marketing', count: '6' },
   ] },
-  { id: 'reports', icon: ChartNoAxesCombined, label: 'Reports', open: true, rows: [
+  { id: 'reports', icon: ChartNoAxesCombined, label: 'Reports', rows: [
     { label: 'Overview' }, { label: 'Productivity' }, { label: 'Usage' },
   ] },
 ];
 
 const PROJECT_GROUPS: Group[] = [
-  { id: 'northstar', icon: FolderOpenDot, label: 'Northstar Mobile', open: true, rows: [
+  { id: 'northstar', icon: FolderOpenDot, label: 'Northstar Mobile', rows: [
     { label: 'Launch brief', count: '4' }, { label: 'Research notes', count: '9' }, { label: 'Decision log' },
   ] },
-  // Closed in Figma, so its rows aren't drawn there — these are placeholders.
-  { id: 'website', icon: Folder, label: 'Website refresh', open: false, rows: [
+  { id: 'website', icon: Folder, label: 'Website refresh', rows: [
     { label: 'Homepage' }, { label: 'Brand guidelines' },
   ] },
-  { id: 'copilot', icon: Sparkles, label: 'AI Copilot', open: true, rows: [
+  { id: 'copilot', icon: Sparkles, label: 'AI Copilot', rows: [
     { label: 'Prompt library', count: '16' }, { label: 'Beta feedback', count: '7' },
   ] },
 ];
@@ -117,27 +123,56 @@ const NavRow: React.FC<Row> = ({ label, count, dot }) => (
   </button>
 );
 
+// Rows are always mounted (never conditionally rendered) so the grid-rows
+// transition has something to animate between — same trick as Accordion.
+// Header + rows are one flex item (.groupItem) so the parent's between-group
+// gap doesn't also sneak in as a second gap above the (0-height-when-closed)
+// rows wrapper — the header-to-rows gap instead lives inside rowsInner's own
+// top padding, which the grid-rows collapse hides along with everything else
+// while closed.
 const NavGroup: React.FC<{ group: Group; open: boolean; onToggle: () => void }> = ({ group, open, onToggle }) => (
-  <>
+  <div className={styles.groupItem}>
     <SidebarItem icon={group.icon} label={group.label} hasSubmenu expanded={open} onClick={onToggle} />
-    {open && group.rows.map((row) => <NavRow key={row.label} {...row} />)}
-  </>
+    <div className={[styles.rowsWrap, open ? styles['rowsWrap--open'] : ''].filter(Boolean).join(' ')}>
+      <div className={styles.rowsClip}>
+        <div className={styles.rowsInner}>
+          {group.rows.map((row) => <NavRow key={row.label} {...row} />)}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+/** Collapsed rail item with its own tooltip — the rail sits flush left, so
+ * the bubble opens to the right (pointer="center-right"). */
+const RailItem: React.FC<{ icon: LucideIcon; label: string; active: boolean; onClick: () => void }> = ({
+  icon, label, active, onClick,
+}) => (
+  <Tooltip title={label} pointer="center-right">
+    <SidebarItem
+      icon={icon}
+      label={label}
+      collapsed
+      active={active}
+      activeIndicator={false}
+      nativeTooltip={false}
+      onClick={onClick}
+    />
+  </Tooltip>
 );
 
 /* ── Sidebar ─────────────────────────────────────────────────────────────── */
 
 export interface WorkspaceSidebarProps {
-  /** Group ids open on first render. Defaults to the Figma state (all open except "Website refresh"). */
+  /** Group ids open on first render. Defaults to none — every group starts closed. */
   defaultOpen?: string[];
   /** Rail item active — and the drawer open — on first render. Defaults to
    * none: the collapsed rail alone is the resting state. */
   defaultActiveRail?: string;
 }
 
-export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ defaultOpen, defaultActiveRail }) => {
-  const [open, setOpen] = React.useState<Set<string>>(
-    () => new Set(defaultOpen ?? [...WORKSPACE_GROUPS, ...PROJECT_GROUPS].filter((g) => g.open).map((g) => g.id)),
-  );
+export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ defaultOpen = [], defaultActiveRail }) => {
+  const [open, setOpen] = React.useState<Set<string>>(() => new Set(defaultOpen));
   const toggle = (id: string) =>
     setOpen((prev) => {
       const next = new Set(prev);
@@ -159,27 +194,24 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ defaultOpen,
     <div className={styles.shell}>
       <aside className={styles.rail} aria-label="Workspace shortcuts">
         <div className={styles.railGroup}>
-          <span className={styles.mark} aria-hidden="true"><Sparkles size={18} /></span>
+          <Tooltip title="Sakani" pointer="center-right">
+            <span className={styles.mark} aria-hidden="true"><WorkspaceLogo tone="brand" size={32} /></span>
+          </Tooltip>
           <Divider className={styles.railDivider} />
           {RAIL.map(({ icon, label }) => (
-            <SidebarItem
-              key={label}
-              icon={icon}
-              label={label}
-              collapsed
-              active={activeRail === label}
-              activeIndicator={false}
-              aria-pressed={activeRail === label}
-              onClick={() => handleRailClick(label)}
-            />
+            <RailItem key={label} icon={icon} label={label} active={activeRail === label} onClick={() => handleRailClick(label)} />
           ))}
         </div>
         <div className={styles.railGroup}>
           {RAIL_UTILITIES.map(({ icon, label }) => (
-            <IconButton key={label} icon={icon} aria-label={label} variant="ghost" size="sm" />
+            <Tooltip key={label} title={label} pointer="center-right">
+              <IconButton icon={icon} aria-label={label} variant="ghost" size="sm" />
+            </Tooltip>
           ))}
           <Divider className={styles.railDivider} />
-          <Avatar size="md" initials="AB" />
+          <Tooltip title="Maya Chen" subtitle="maya@northstar.ai" pointer="center-right">
+            <Avatar size="md" initials="AB" />
+          </Tooltip>
         </div>
       </aside>
 

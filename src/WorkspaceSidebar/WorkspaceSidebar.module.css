@@ -1,9 +1,18 @@
-/* Figma "AI workspace sidebar" (2307:42338): 56px rail + 336px panel. */
+/* Figma "AI workspace sidebar" (2307:42338): 56px rail + 336px drawer.
+ * No fixed height -- the shell hugs whichever side (rail or drawer) is
+ * taller, so with every group closed by default it stays compact instead
+ * of claiming the full viewport. Rounded + bordered + shadowed since it now
+ * reads as a self-contained card rather than a full-bleed page shell. */
 .shell {
   display: flex;
-  height: 100vh;
   font-family: var(--font-sans);
   background: var(--color-bg-surface);
+  border: var(--border-width-100) solid var(--color-border-subtle);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  /* No overflow: hidden -- the rail's tooltips open to the right and must be
+     able to leave the card. The rail and drawer paint no background of their
+     own, so nothing pokes past the rounded corners without clipping. */
 }
 
 /* ── Collapsed utility rail ── */
@@ -15,9 +24,9 @@
   width: 56px;
   flex-shrink: 0;
   padding: var(--space-12) 0;
-  /* Figma fill is a raw #F7F7F8 (not bound to a token). */
-  background: #f7f7f8;
-  border-right: var(--border-width-100) solid var(--color-border-subtle);
+  /* White rail: transparent over the shell's bg/surface (Figma's raw #F7F7F8
+     fill was swapped for white on request). */
+  background: transparent;
   box-sizing: border-box;
 }
 .railGroup {
@@ -36,9 +45,6 @@
   width: 32px;
   height: 32px;
   flex-shrink: 0;
-  border-radius: var(--radius-md);
-  background: #6d5ce7; /* Figma "Product mark" fill (raw hex) */
-  color: #fff;
 }
 
 /* ── Workspace navigation drawer ──
@@ -59,11 +65,17 @@
   flex-direction: column;
   gap: var(--space-8);
   width: 336px;
-  height: 100%;
+  /* No explicit height: it hugs its own content (header/search/nav/groups/
+     promo/footer) so the whole shell stays compact -- Storybook's iframe
+     document happens to give percentages a definite chain up to the
+     viewport, so `height: 100%` here silently meant "100vh", not "as tall
+     as my content", stretching the drawer (and the rail beside it, via flex
+     stretch) to fill the screen even with every group closed. */
   flex-shrink: 0;
-  min-height: 0;
   padding: 14px var(--space-12) var(--space-12);
-  background: var(--color-bg-surface);
+  /* Rail/drawer divider. Drawn by the drawer itself so it's clipped away
+     with it when closed, instead of doubling up with the card's border. */
+  box-shadow: inset var(--border-width-100) 0 0 var(--color-border-subtle);
   box-sizing: border-box;
   transform: translateX(-24px);
   opacity: 0;
@@ -86,7 +98,10 @@
   padding-inline: 2px;
 }
 .list { display: flex; flex-direction: column; gap: var(--space-2); }
+/* Gap lives between whole groups (.groupItem); see NavGroup for why the
+   header-to-rows gap is handled separately, inside rowsInner. */
 .groups { display: flex; flex-direction: column; gap: var(--space-4); }
+.groupItem { display: flex; flex-direction: column; }
 
 /* Figma's group label keeps the text's own case ("Workspace", 4% tracking);
    the library component uppercases it. */
@@ -124,3 +139,30 @@
   background: var(--color-fg-subtle);
 }
 .row__label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Group reveal animation (Accordion's own grid-rows 0fr -> 1fr trick) ──
+ * .rowsWrap/.rowsClip are always mounted, closed by default, so there's
+ * something to animate between instead of the rows just popping in. On top
+ * of that height reveal, each row also fades and rises in with a short
+ * per-row stagger for a slightly livelier "cascade" open. */
+.rowsWrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--motion-slow) var(--ease-out);
+}
+.rowsWrap--open { grid-template-rows: 1fr; }
+.rowsClip { overflow: hidden; }
+.rowsInner { display: flex; flex-direction: column; gap: var(--space-4); padding-top: var(--space-4); }
+
+.rowsInner > * {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 160ms ease, transform 200ms var(--ease-out);
+  transition-delay: 0ms;
+}
+.rowsWrap--open .rowsInner > * { opacity: 1; transform: translateY(0); }
+.rowsWrap--open .rowsInner > *:nth-child(1) { transition-delay: 20ms; }
+.rowsWrap--open .rowsInner > *:nth-child(2) { transition-delay: 50ms; }
+.rowsWrap--open .rowsInner > *:nth-child(3) { transition-delay: 80ms; }
+.rowsWrap--open .rowsInner > *:nth-child(4) { transition-delay: 110ms; }
+.rowsWrap--open .rowsInner > *:nth-child(n+5) { transition-delay: 140ms; }
