@@ -78,7 +78,9 @@ const PRIMARY_NAV: Array<{ icon: LucideIcon; label: string; badge?: string }> = 
   { icon: ListChecks, label: 'My tasks', badge: '8' },
 ];
 
-interface Row { label: string; count?: string; dot?: boolean }
+/** Status dot color — one of the design system's solid status tokens. */
+type DotTone = 'info' | 'warning' | 'danger' | 'success';
+interface Row { label: string; count?: string; dot?: DotTone }
 interface Group { id: string; icon: LucideIcon; label: string; rows: Row[] }
 
 const WORKSPACE_GROUPS: Group[] = [
@@ -86,10 +88,10 @@ const WORKSPACE_GROUPS: Group[] = [
     { label: 'Active projects', count: '6' }, { label: 'Templates' }, { label: 'Archive' },
   ] },
   { id: 'tasks', icon: SquareCheckBig, label: 'Tasks', rows: [
-    { label: 'My tasks', count: '8', dot: true },
-    { label: 'Assigned to me', count: '14', dot: true },
-    { label: 'Priorities', count: '3', dot: true },
-    { label: 'Completed', dot: true },
+    { label: 'My tasks', count: '8', dot: 'info' },
+    { label: 'Assigned to me', count: '14', dot: 'warning' },
+    { label: 'Priorities', count: '3', dot: 'danger' },
+    { label: 'Completed', dot: 'success' },
   ] },
   { id: 'views', icon: LayoutDashboard, label: 'Views', rows: [
     { label: 'Board' }, { label: 'List' }, { label: 'Calendar' },
@@ -126,7 +128,7 @@ const NavRow: React.FC<Row & { active: boolean; onSelect: () => void }> = ({ lab
     className={[styles.row, active ? styles['row--active'] : ''].filter(Boolean).join(' ')}
     onClick={onSelect}
   >
-    {dot && <span className={styles.row__dot} aria-hidden="true" />}
+    {dot && <span className={styles.row__dot} style={{ background: `var(--color-${dot}-solid)` }} aria-hidden="true" />}
     <span className={styles.row__label}>{label}</span>
     {count && <Badge variant="neutral" emphasis="subtle">{count}</Badge>}
   </button>
