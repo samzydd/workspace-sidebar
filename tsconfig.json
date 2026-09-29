@@ -9,6 +9,16 @@
     "skipLibCheck": true,
     "noEmit": true,
     "types": ["vite/client"]
+    // No `paths` alias to the sibling design-system source here: Vite's own
+    // alias (.storybook/main.ts) is what Storybook actually runs against,
+    // but mirroring it for `tsc`/the editor pulls in that checkout's
+    // lucide-react types, which resolve to a different lucide-react install
+    // than this project's own (a pre-existing cross-project symlink
+    // fragility — see the "Mobile investment dashboard" / CRM app memory)
+    // and produces bogus "two different types with this name" errors.
+    // Until unreleased SidebarItem/SidebarFooter props (`expanded`,
+    // `aria-pressed`) are published, `tsc` here will flag them even though
+    // Storybook renders correctly — vite dev doesn't type-check.
   },
   "include": ["src", ".storybook"]
 }

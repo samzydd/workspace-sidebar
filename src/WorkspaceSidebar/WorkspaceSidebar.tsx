@@ -1,19 +1,27 @@
 /**
- * WorkspaceSidebar — Figma "AI workspace sidebar" (Sakani Design System file,
- * node 2307:42338), composed from @sakaniui/react.
+ * WorkspaceSidebar — a rail + slide-out drawer exploration of @sakaniui/react,
+ * built from the Figma "AI workspace sidebar" (Sakani Design System file,
+ * node 2307:42338).
  *
- *   Collapsed utility rail (56)          Workspace navigation (336)
- *   ├─ Product mark (sparkles)           ├─ SidebarHeader type="workspace"
- *   ├─ Divider                           ├─ SidebarSearch type="command"
- *   ├─ SidebarItem collapsed ×8          ├─ primary nav — SidebarItem ×4
- *   │   (first = Active - Default)       ├─ SidebarDivider
- *   └─ IconButton ghost ×3, Divider,     ├─ "Workspace" — 5 collapsible groups
- *      Avatar                            ├─ SidebarDivider
- *                                        ├─ "Projects" — 3 collapsible groups
- *                                        ├─ SidebarDivider
- *                                        ├─ Settings, Help & docs
- *                                        ├─ SidebarPromo type="upgrade"
- *                                        └─ SidebarFooter type="user-menu"
+ * Interaction (not the literal Figma layout, which shows both panes open at
+ * once): the rail is the default view — nothing active, no drawer. Clicking
+ * a rail item makes *that* item Active and slides the workspace-navigation
+ * drawer open next to it; clicking the active item again slides it shut.
+ * The drawer itself carries no active state of its own — every group header
+ * and row starts neutral, so it's a blank surface to click around in.
+ *
+ *   Collapsed utility rail (56, always visible)   Drawer (336, slides in/out)
+ *   ├─ Product mark (sparkles)                    ├─ SidebarHeader type="workspace"
+ *   ├─ Divider                                    ├─ SidebarSearch type="command"
+ *   ├─ SidebarItem collapsed ×8 (click → active)   ├─ primary nav — SidebarItem ×4
+ *   └─ IconButton ghost ×3, Divider, Avatar        ├─ SidebarDivider
+ *                                                  ├─ "Workspace" — 5 collapsible groups
+ *                                                  ├─ SidebarDivider
+ *                                                  ├─ "Projects" — 3 collapsible groups
+ *                                                  ├─ SidebarDivider
+ *                                                  ├─ Settings, Help & docs
+ *                                                  ├─ SidebarPromo type="upgrade"
+ *                                                  └─ SidebarFooter type="user-menu"
  *
  * Group headers are SidebarItem with `hasSubmenu` + `expanded`; clicking one
  * shows or hides its rows. The rows are not a library component in Figma
@@ -61,16 +69,16 @@ const PRIMARY_NAV: Array<{ icon: LucideIcon; label: string; badge?: string }> = 
   { icon: ListChecks, label: 'My tasks', badge: '8' },
 ];
 
-interface Row { label: string; count?: string; dot?: boolean; active?: boolean }
-interface Group { id: string; icon: LucideIcon; label: string; active?: boolean; open: boolean; rows: Row[] }
+interface Row { label: string; count?: string; dot?: boolean }
+interface Group { id: string; icon: LucideIcon; label: string; open: boolean; rows: Row[] }
 
 const WORKSPACE_GROUPS: Group[] = [
   { id: 'projects', icon: FolderKanban, label: 'Projects', open: true, rows: [
     { label: 'Active projects', count: '6' }, { label: 'Templates' }, { label: 'Archive' },
   ] },
-  { id: 'tasks', icon: SquareCheckBig, label: 'Tasks', active: true, open: true, rows: [
+  { id: 'tasks', icon: SquareCheckBig, label: 'Tasks', open: true, rows: [
     { label: 'My tasks', count: '8', dot: true },
-    { label: 'Assigned to me', count: '14', dot: true, active: true },
+    { label: 'Assigned to me', count: '14', dot: true },
     { label: 'Priorities', count: '3', dot: true },
     { label: 'Completed', dot: true },
   ] },
@@ -100,13 +108,9 @@ const PROJECT_GROUPS: Group[] = [
 
 /* ── Pieces ──────────────────────────────────────────────────────────────── */
 
-const NavRow: React.FC<Row> = ({ label, count, dot, active }) => (
-  <button
-    type="button"
-    data-hover-item=""
-    aria-current={active ? 'page' : undefined}
-    className={[styles.row, active ? styles['row--active'] : ''].filter(Boolean).join(' ')}
-  >
+// No active row in the drawer by design — see the file header.
+const NavRow: React.FC<Row> = ({ label, count, dot }) => (
+  <button type="button" data-hover-item="" className={styles.row}>
     {dot && <span className={styles.row__dot} aria-hidden="true" />}
     <span className={styles.row__label}>{label}</span>
     {count && <Badge variant="neutral" emphasis="subtle">{count}</Badge>}
@@ -115,7 +119,7 @@ const NavRow: React.FC<Row> = ({ label, count, dot, active }) => (
 
 const NavGroup: React.FC<{ group: Group; open: boolean; onToggle: () => void }> = ({ group, open, onToggle }) => (
   <>
-    <SidebarItem icon={group.icon} label={group.label} active={group.active} hasSubmenu expanded={open} onClick={onToggle} />
+    <SidebarItem icon={group.icon} label={group.label} hasSubmenu expanded={open} onClick={onToggle} />
     {open && group.rows.map((row) => <NavRow key={row.label} {...row} />)}
   </>
 );
@@ -125,9 +129,12 @@ const NavGroup: React.FC<{ group: Group; open: boolean; onToggle: () => void }> 
 export interface WorkspaceSidebarProps {
   /** Group ids open on first render. Defaults to the Figma state (all open except "Website refresh"). */
   defaultOpen?: string[];
+  /** Rail item active — and the drawer open — on first render. Defaults to
+   * none: the collapsed rail alone is the resting state. */
+  defaultActiveRail?: string;
 }
 
-export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ defaultOpen }) => {
+export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ defaultOpen, defaultActiveRail }) => {
   const [open, setOpen] = React.useState<Set<string>>(
     () => new Set(defaultOpen ?? [...WORKSPACE_GROUPS, ...PROJECT_GROUPS].filter((g) => g.open).map((g) => g.id)),
   );
@@ -139,6 +146,12 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ defaultOpen 
     });
   const [promo, setPromo] = React.useState(true);
 
+  // The rail item that's Active also drives whether the drawer is open —
+  // clicking the already-active item closes it, clicking another switches.
+  const [activeRail, setActiveRail] = React.useState<string | undefined>(defaultActiveRail);
+  const drawerOpen = activeRail !== undefined;
+  const handleRailClick = (label: string) => setActiveRail((prev) => (prev === label ? undefined : label));
+
   const renderGroups = (groups: Group[]) =>
     groups.map((g) => <NavGroup key={g.id} group={g} open={open.has(g.id)} onToggle={() => toggle(g.id)} />);
 
@@ -148,8 +161,17 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ defaultOpen 
         <div className={styles.railGroup}>
           <span className={styles.mark} aria-hidden="true"><Sparkles size={18} /></span>
           <Divider className={styles.railDivider} />
-          {RAIL.map(({ icon, label }, i) => (
-            <SidebarItem key={label} icon={icon} label={label} collapsed active={i === 0} activeIndicator={false} />
+          {RAIL.map(({ icon, label }) => (
+            <SidebarItem
+              key={label}
+              icon={icon}
+              label={label}
+              collapsed
+              active={activeRail === label}
+              activeIndicator={false}
+              aria-pressed={activeRail === label}
+              onClick={() => handleRailClick(label)}
+            />
           ))}
         </div>
         <div className={styles.railGroup}>
@@ -161,45 +183,51 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ defaultOpen 
         </div>
       </aside>
 
-      <nav className={styles.panel} aria-label="Workspace navigation">
-        <HoverGroup className={styles.scroll}>
-          <SidebarHeader type="workspace" title="Sakaniui Ai" subtitle="Product workspace · 24 members" logo={<WorkspaceLogo />} />
-          <SidebarSearch type="command" placeholder="Search or ask AI…" />
+      <nav
+        className={[styles.panelWrap, drawerOpen ? styles['panelWrap--open'] : ''].filter(Boolean).join(' ')}
+        aria-label="Workspace navigation"
+        aria-hidden={!drawerOpen}
+      >
+        <div className={styles.panel}>
+          <HoverGroup className={styles.scroll}>
+            <SidebarHeader type="workspace" title="Sakaniui Ai" subtitle="Product workspace · 24 members" logo={<WorkspaceLogo />} />
+            <SidebarSearch type="command" placeholder="Search or ask AI…" />
 
-          <div className={styles.list}>
-            {PRIMARY_NAV.map((item) => <SidebarItem key={item.label} {...item} />)}
-          </div>
+            <div className={styles.list}>
+              {PRIMARY_NAV.map((item) => <SidebarItem key={item.label} {...item} />)}
+            </div>
 
-          <SidebarDivider />
-          <div className={styles.groups}>
-            <div className={styles.label}><SidebarGroupLabel>Workspace</SidebarGroupLabel></div>
-            {renderGroups(WORKSPACE_GROUPS)}
-          </div>
+            <SidebarDivider />
+            <div className={styles.groups}>
+              <div className={styles.label}><SidebarGroupLabel>Workspace</SidebarGroupLabel></div>
+              {renderGroups(WORKSPACE_GROUPS)}
+            </div>
 
-          <SidebarDivider />
-          <div className={styles.groups}>
-            <div className={styles.label}><SidebarGroupLabel>Projects</SidebarGroupLabel></div>
-            {renderGroups(PROJECT_GROUPS)}
-          </div>
+            <SidebarDivider />
+            <div className={styles.groups}>
+              <div className={styles.label}><SidebarGroupLabel>Projects</SidebarGroupLabel></div>
+              {renderGroups(PROJECT_GROUPS)}
+            </div>
 
-          <SidebarDivider />
-          <div className={styles.list}>
-            <SidebarItem icon={Settings2} label="Settings" />
-            <SidebarItem icon={LifeBuoy} label="Help & docs" />
-          </div>
+            <SidebarDivider />
+            <div className={styles.list}>
+              <SidebarItem icon={Settings2} label="Settings" />
+              <SidebarItem icon={LifeBuoy} label="Help & docs" />
+            </div>
 
-          {promo && (
-            <SidebarPromo
-              type="upgrade"
-              title="Upgrade to Pro"
-              description="Unlock unlimited projects and advanced analytics."
-              ctaLabel="Upgrade workspace"
-              onDismiss={() => setPromo(false)}
-            />
-          )}
-        </HoverGroup>
+            {promo && (
+              <SidebarPromo
+                type="upgrade"
+                title="Upgrade to Pro"
+                description="Unlock unlimited projects and advanced analytics."
+                ctaLabel="Upgrade workspace"
+                onDismiss={() => setPromo(false)}
+              />
+            )}
+          </HoverGroup>
 
-        <SidebarFooter type="user-menu" title="Maya Chen" subtitle="maya@northstar.ai" avatarInitials="AB" />
+          <SidebarFooter type="user-menu" title="Maya Chen" subtitle="maya@northstar.ai" avatarInitials="AB" />
+        </div>
       </nav>
     </div>
   );
