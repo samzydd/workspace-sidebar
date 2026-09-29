@@ -1,0 +1,28 @@
+{
+  "name": "workspace-sidebar",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "AI workspace sidebar (Figma node 2307:42338) built from @sakaniui/react — standalone Storybook, not part of the design-system docs.",
+  "scripts": {
+    "storybook": "storybook dev -p 6007",
+    "storybook:npm": "SAKANI_DS=npm storybook dev -p 6007",
+    "build-storybook": "storybook build"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "^5.2.9",
+    "@sakaniui/react": "^0.3.24",
+    "lucide-react": "^1.25.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@storybook/react-vite": "^10.5.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "storybook": "^10.5.2",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.1"
+  }
+}

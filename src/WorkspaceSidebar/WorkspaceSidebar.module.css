@@ -1,0 +1,107 @@
+/* Figma "AI workspace sidebar" (2307:42338): 56px rail + 336px panel. */
+.shell {
+  display: flex;
+  height: 100vh;
+  font-family: var(--font-sans);
+  background: var(--color-bg-surface);
+}
+
+/* ── Collapsed utility rail ── */
+.rail {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  width: 56px;
+  flex-shrink: 0;
+  padding: var(--space-12) 0;
+  /* Figma fill is a raw #F7F7F8 (not bound to a token). */
+  background: #f7f7f8;
+  border-right: var(--border-width-100) solid var(--color-border-subtle);
+  box-sizing: border-box;
+}
+.railGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  width: 32px;
+}
+.railDivider { width: 32px; }
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: #6d5ce7; /* Figma "Product mark" fill (raw hex) */
+  color: #fff;
+}
+
+/* ── Workspace navigation ── */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  width: 336px;
+  flex-shrink: 0;
+  min-height: 0;
+  padding: 14px var(--space-12) var(--space-12);
+  background: var(--color-bg-surface);
+  box-sizing: border-box;
+}
+.scroll {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  /* overflow clips horizontally too: 2px of slack keeps the active item's
+     accent bar (left: -1px) and focus rings visible. */
+  margin-inline: -2px;
+  padding-inline: 2px;
+}
+.list { display: flex; flex-direction: column; gap: var(--space-2); }
+.groups { display: flex; flex-direction: column; gap: var(--space-4); }
+
+/* Figma's group label keeps the text's own case ("Workspace", 4% tracking);
+   the library component uppercases it. */
+.label > * { text-transform: none; letter-spacing: 0.04em; line-height: 16px; }
+
+/* ── Group rows (Figma "Navigation item" frames) ── */
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  width: 100%;
+  height: 27px;
+  padding: 0 var(--space-10) 0 var(--space-16);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-fg-muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  transition: background-color var(--transition-base), color var(--transition-base);
+}
+.row:hover { background: var(--hover-fill, var(--color-bg-subtle)); color: var(--color-fg-default); }
+.row:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--color-border-focus); }
+.row--active { background: var(--color-bg-subtle); color: var(--color-fg-default); }
+.row__dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-fg-subtle);
+}
+.row__label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
