@@ -10,7 +10,7 @@
  * Everything in the drawer starts neutral; clicking a sub-item row makes it
  * the one Active row (group headers only open and close).
  *
- *   Collapsed utility rail (56, always visible)   Drawer (336, slides in/out)
+ *   Collapsed utility rail (56, always visible)   Drawer (240, slides in/out)
  *   ├─ Sakani logo (brand mark)                   ├─ SidebarHeader type="workspace"
  *   ├─ Divider                                    ├─ SidebarSearch type="command"
  *   ├─ SidebarItem collapsed ×8 (click → active)   ├─ primary nav — SidebarItem ×4
