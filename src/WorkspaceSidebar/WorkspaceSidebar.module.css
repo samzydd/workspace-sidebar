@@ -10,9 +10,9 @@
   box-sizing: border-box;
   font-family: var(--font-sans);
   background: var(--color-bg-surface);
-  border: var(--border-width-100) solid var(--color-border-subtle);
+  border: 0.5px solid var(--color-border-subtle);
   border-radius: 16px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-xs); /* smallest shadow token */
   /* No overflow: hidden -- the rail's tooltips open to the right and must be
      able to leave the card. The rail and drawer paint no background of their
      own, so nothing pokes past the rounded corners without clipping. */
@@ -40,6 +40,11 @@
   width: 32px;
 }
 .railDivider { width: 32px; }
+
+/* Rail tooltip wrapper (see RailTip). !important mirrors the library's own
+   Escape-dismiss rule, which it needs to beat :hover / :focus-within. */
+.railTip { display: inline-flex; }
+.railTip--muted [role='tooltip'] { opacity: 0 !important; visibility: hidden !important; }
 
 .mark {
   display: inline-flex;

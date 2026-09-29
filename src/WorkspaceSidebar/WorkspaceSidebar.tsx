@@ -143,12 +143,29 @@ const NavGroup: React.FC<{ group: Group; open: boolean; onToggle: () => void }> 
   </div>
 );
 
-/** Collapsed rail item with its own tooltip — the rail sits flush left, so
- * the bubble opens to the right (pointer="center-right"). */
+/** Rail tooltip (pointer="center-right": the rail sits flush left, so the
+ * bubble opens to the right) that goes away once its item is clicked.
+ * The library Tooltip also shows on :focus-within, and a clicked button
+ * keeps focus — without this the bubble would stay up after every click.
+ * A fresh hover (or focus leaving) brings it back. */
+const RailTip: React.FC<{ title: string; subtitle?: string; children: React.ReactNode }> = ({ title, subtitle, children }) => {
+  const [muted, setMuted] = React.useState(false);
+  return (
+    <span
+      className={[styles.railTip, muted ? styles['railTip--muted'] : ''].filter(Boolean).join(' ')}
+      onClickCapture={() => setMuted(true)}
+      onMouseEnter={() => setMuted(false)}
+      onBlur={() => setMuted(false)}
+    >
+      <Tooltip title={title} subtitle={subtitle} pointer="center-right">{children}</Tooltip>
+    </span>
+  );
+};
+
 const RailItem: React.FC<{ icon: LucideIcon; label: string; active: boolean; onClick: () => void }> = ({
   icon, label, active, onClick,
 }) => (
-  <Tooltip title={label} pointer="center-right">
+  <RailTip title={label}>
     <SidebarItem
       icon={icon}
       label={label}
@@ -158,7 +175,7 @@ const RailItem: React.FC<{ icon: LucideIcon; label: string; active: boolean; onC
       nativeTooltip={false}
       onClick={onClick}
     />
-  </Tooltip>
+  </RailTip>
 );
 
 /* ── Sidebar ─────────────────────────────────────────────────────────────── */
@@ -194,9 +211,9 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ defaultOpen 
     <div className={styles.shell}>
       <aside className={styles.rail} aria-label="Workspace shortcuts">
         <div className={styles.railGroup}>
-          <Tooltip title="Sakani" pointer="center-right">
+          <RailTip title="Sakani">
             <span className={styles.mark} aria-hidden="true"><WorkspaceLogo tone="brand" size={32} /></span>
-          </Tooltip>
+          </RailTip>
           <Divider className={styles.railDivider} />
           {RAIL.map(({ icon, label }) => (
             <RailItem key={label} icon={icon} label={label} active={activeRail === label} onClick={() => handleRailClick(label)} />
@@ -204,14 +221,14 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ defaultOpen 
         </div>
         <div className={styles.railGroup}>
           {RAIL_UTILITIES.map(({ icon, label }) => (
-            <Tooltip key={label} title={label} pointer="center-right">
+            <RailTip key={label} title={label}>
               <IconButton icon={icon} aria-label={label} variant="ghost" size="sm" />
-            </Tooltip>
+            </RailTip>
           ))}
           <Divider className={styles.railDivider} />
-          <Tooltip title="Maya Chen" subtitle="maya@northstar.ai" pointer="center-right">
+          <RailTip title="Maya Chen" subtitle="maya@northstar.ai">
             <Avatar size="md" initials="AB" />
-          </Tooltip>
+          </RailTip>
         </div>
       </aside>
 
