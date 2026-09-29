@@ -98,14 +98,15 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  scrollbar-width: thin;
-  /* Thumb at 12% of fg/default, no track. */
-  scrollbar-color: color-mix(in srgb, var(--color-fg-default) 12%, transparent) transparent;
+  /* Scrolling still works (wheel/trackpad/touch/keyboard); the bar itself
+     is just never drawn. */
+  scrollbar-width: none;
   /* overflow clips horizontally too: 2px of slack keeps the active item's
      accent bar (left: -1px) and focus rings visible. */
   margin-inline: -2px;
   padding-inline: 2px;
 }
+.scroll::-webkit-scrollbar { display: none; } /* Chrome/Safari/Edge */
 .list { display: flex; flex-direction: column; gap: var(--space-2); }
 /* Gap lives between whole groups (.groupItem); see NavGroup for why the
    header-to-rows gap is handled separately, inside rowsInner. */
