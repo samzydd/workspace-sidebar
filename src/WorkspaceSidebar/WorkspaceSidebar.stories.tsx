@@ -4,23 +4,20 @@ import { WorkspaceSidebar } from './WorkspaceSidebar';
 const meta = {
   title: 'Workspace Sidebar',
   component: WorkspaceSidebar,
-  // Storybook's own preview CSS forces `height: 100%` onto whatever renders
-  // directly under #storybook-root (needed for stories that *do* want to
-  // fill the canvas), which would stretch our now content-sized, no-forced-
-  // height shell right back to full viewport height. This decorator absorbs
-  // that rule on a plain wrapper div instead, then centers the shell inside
-  // it with its own inline flex (align-items: 'center', not the flex
-  // default 'stretch') so the shell renders at its true, compact height.
+  // Viewport-tall, horizontally centered stage with a 24px margin: the card
+  // fills it top to bottom, so the whole sidebar fits on screen for a
+  // recording without page scrolling. Inline height beats Storybook's own
+  // `#storybook-root > * { height: 100% }` rule.
   decorators: [(Story) => (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', height: '100vh', padding: 24, boxSizing: 'border-box' }}>
       <Story />
     </div>
   )],
   parameters: {
-    // Centered (not the default fullscreen) — this is a compact,
-    // content-sized card now, not a full-bleed page, so it reads best
-    // floating in the middle of the canvas. Good for a clean screenshot.
-    layout: 'centered',
+    // Fullscreen (no Storybook padding) — the decorator above does the
+    // centering and margin itself; 'centered' would add its own padding on
+    // top of the 100vh stage and make the page scroll.
+    layout: 'fullscreen',
     docs: { description: { component: `Rail-first exploration of @sakaniui/react. The rail alone is the resting
 state — nothing is active, no drawer. Click a rail item to make it Active
 and slide the workspace-navigation drawer open next to it; click it again

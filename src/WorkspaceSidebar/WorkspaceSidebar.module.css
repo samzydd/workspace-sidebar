@@ -1,10 +1,13 @@
 /* Figma "AI workspace sidebar" (2307:42338): 56px rail + 336px drawer.
- * No fixed height -- the shell hugs whichever side (rail or drawer) is
- * taller, so with every group closed by default it stays compact instead
- * of claiming the full viewport. Rounded + bordered + shadowed since it now
- * reads as a self-contained card rather than a full-bleed page shell. */
+ * Fills its container's height (the Storybook decorator gives it the
+ * viewport minus a margin), so the logo at the top and the account menu at
+ * the bottom are always on screen together -- only the drawer's middle
+ * section scrolls when opened groups need more room. Rounded + bordered +
+ * shadowed so it reads as a self-contained card. */
 .shell {
   display: flex;
+  height: 100%;
+  box-sizing: border-box;
   font-family: var(--font-sans);
   background: var(--color-bg-surface);
   border: var(--border-width-100) solid var(--color-border-subtle);
@@ -65,12 +68,9 @@
   flex-direction: column;
   gap: var(--space-8);
   width: 336px;
-  /* No explicit height: it hugs its own content (header/search/nav/groups/
-     promo/footer) so the whole shell stays compact -- Storybook's iframe
-     document happens to give percentages a definite chain up to the
-     viewport, so `height: 100%` here silently meant "100vh", not "as tall
-     as my content", stretching the drawer (and the rail beside it, via flex
-     stretch) to fill the screen even with every group closed. */
+  /* Full height of the (stretched) drawer, so .scroll gets a bounded box to
+     scroll inside and the footer stays pinned at the bottom. */
+  height: 100%;
   flex-shrink: 0;
   padding: 14px var(--space-12) var(--space-12);
   /* Rail/drawer divider. Drawn by the drawer itself so it's clipped away
@@ -92,6 +92,7 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  scrollbar-width: thin;
   /* overflow clips horizontally too: 2px of slack keeps the active item's
      accent bar (left: -1px) and focus rings visible. */
   margin-inline: -2px;
