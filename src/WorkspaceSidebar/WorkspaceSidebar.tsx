@@ -7,8 +7,8 @@
  * once): the rail is the default view — nothing active, no drawer. Clicking
  * a rail item makes *that* item Active and slides the workspace-navigation
  * drawer open next to it; clicking the active item again slides it shut.
- * The drawer itself carries no active state of its own — every group header
- * and row starts neutral, so it's a blank surface to click around in.
+ * Everything in the drawer starts neutral; clicking a sub-item row makes it
+ * the one Active row (group headers only open and close).
  *
  *   Collapsed utility rail (56, always visible)   Drawer (336, slides in/out)
  *   ├─ Sakani logo (brand mark)                   ├─ SidebarHeader type="workspace"
@@ -48,6 +48,8 @@ import {
   SidebarGroupLabel, SidebarHeader, SidebarItem, SidebarPromo, SidebarSearch, Tooltip,
 } from '@sakaniui/react';
 import { WorkspaceLogo } from './WorkspaceLogo';
+// Figma Avatar "Type=Image" default photo (node 86:339), exported at 2x.
+import avatarDefault from './avatar-default.jpg';
 import styles from './WorkspaceSidebar.module.css';
 
 /* ── Data (labels, icons and counts exactly as in Figma) ─────────────────── */
@@ -114,9 +116,16 @@ const PROJECT_GROUPS: Group[] = [
 
 /* ── Pieces ──────────────────────────────────────────────────────────────── */
 
-// No active row in the drawer by design — see the file header.
-const NavRow: React.FC<Row> = ({ label, count, dot }) => (
-  <button type="button" data-hover-item="" className={styles.row}>
+// Rows start neutral; the one you click becomes Active (Figma's "Assigned to
+// me" treatment: bg/subtle + fg/default label).
+const NavRow: React.FC<Row & { active: boolean; onSelect: () => void }> = ({ label, count, dot, active, onSelect }) => (
+  <button
+    type="button"
+    data-hover-item=""
+    aria-current={active ? 'page' : undefined}
+    className={[styles.row, active ? styles['row--active'] : ''].filter(Boolean).join(' ')}
+    onClick={onSelect}
+  >
     {dot && <span className={styles.row__dot} aria-hidden="true" />}
     <span className={styles.row__label}>{label}</span>
     {count && <Badge variant="neutral" emphasis="subtle">{count}</Badge>}
@@ -130,13 +139,18 @@ const NavRow: React.FC<Row> = ({ label, count, dot }) => (
 // rows wrapper — the header-to-rows gap instead lives inside rowsInner's own
 // top padding, which the grid-rows collapse hides along with everything else
 // while closed.
-const NavGroup: React.FC<{ group: Group; open: boolean; onToggle: () => void }> = ({ group, open, onToggle }) => (
+const NavGroup: React.FC<{
+  group: Group; open: boolean; onToggle: () => void; activeRow?: string; onSelectRow: (id: string) => void;
+}> = ({ group, open, onToggle, activeRow, onSelectRow }) => (
   <div className={styles.groupItem}>
     <SidebarItem icon={group.icon} label={group.label} hasSubmenu expanded={open} onClick={onToggle} />
     <div className={[styles.rowsWrap, open ? styles['rowsWrap--open'] : ''].filter(Boolean).join(' ')}>
       <div className={styles.rowsClip}>
         <div className={styles.rowsInner}>
-          {group.rows.map((row) => <NavRow key={row.label} {...row} />)}
+          {group.rows.map((row) => {
+            const id = `${group.id}/${row.label}`;
+            return <NavRow key={row.label} {...row} active={activeRow === id} onSelect={() => onSelectRow(id)} />;
+          })}
         </div>
       </div>
     </div>
@@ -197,6 +211,8 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ defaultOpen 
       return next;
     });
   const [promo, setPromo] = React.useState(true);
+  // One active row across the whole drawer ("groupId/label"); none until clicked.
+  const [activeRow, setActiveRow] = React.useState<string | undefined>();
 
   // The rail item that's Active also drives whether the drawer is open —
   // clicking the already-active item closes it, clicking another switches.
@@ -205,7 +221,9 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ defaultOpen 
   const handleRailClick = (label: string) => setActiveRail((prev) => (prev === label ? undefined : label));
 
   const renderGroups = (groups: Group[]) =>
-    groups.map((g) => <NavGroup key={g.id} group={g} open={open.has(g.id)} onToggle={() => toggle(g.id)} />);
+    groups.map((g) => (
+      <NavGroup key={g.id} group={g} open={open.has(g.id)} onToggle={() => toggle(g.id)} activeRow={activeRow} onSelectRow={setActiveRow} />
+    ));
 
   return (
     <div className={styles.shell}>
@@ -227,7 +245,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ defaultOpen 
           ))}
           <Divider className={styles.railDivider} />
           <RailTip title="Maya Chen" subtitle="maya@northstar.ai">
-            <Avatar size="md" initials="AB" />
+            <Avatar size="md" src={avatarDefault} alt="Maya Chen" />
           </RailTip>
         </div>
       </aside>
@@ -275,7 +293,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ defaultOpen 
             )}
           </HoverGroup>
 
-          <SidebarFooter type="user-menu" title="Maya Chen" subtitle="maya@northstar.ai" avatarInitials="AB" />
+          <SidebarFooter type="user-menu" title="Maya Chen" subtitle="maya@northstar.ai" avatarSrc={avatarDefault} />
         </div>
       </nav>
     </div>
