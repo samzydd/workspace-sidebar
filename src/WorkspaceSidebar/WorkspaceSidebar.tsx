@@ -259,7 +259,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ defaultOpen 
       >
         <div className={styles.panel}>
           <HoverGroup className={styles.scroll}>
-            <SidebarHeader type="workspace" title="Sakaniui Ai" subtitle="Product workspace · 24 members" logo={<WorkspaceLogo />} />
+            <SidebarHeader type="workspace" title="Sakaniui Ai" subtitle="Product workspace · 24 members" />
             <SidebarSearch type="command" placeholder="Search or ask AI…" />
 
             <div className={styles.list}>
