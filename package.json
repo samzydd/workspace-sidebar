@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.9",
-    "@sakaniui/react": "^0.4.6",
+    "@sakaniui/react": "^0.4.7",
     "lucide-react": "^1.25.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
