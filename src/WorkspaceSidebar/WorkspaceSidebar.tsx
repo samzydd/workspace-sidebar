@@ -37,12 +37,7 @@
  */
 
 import React from 'react';
-import {
-  Sparkles, LayoutGrid, Folder, ListTodo, FolderKanban, MessagesSquare, Bot,
-  Users, PlugZap, Settings2, LifeBuoy, SlidersHorizontal, House, Bell, Inbox,
-  ListChecks, SquareCheckBig, LayoutDashboard, ChartNoAxesCombined, FolderOpenDot,
-  type LucideIcon,
-} from 'lucide-react';
+import { IconSparkles as Sparkles, IconLayoutGrid as LayoutGrid, IconFolder as Folder, IconChecklist as ListTodo, IconLayoutKanban as FolderKanban, IconMessages as MessagesSquare, IconRobot as Bot, IconUsers as Users, IconPlugConnected as PlugZap, IconAdjustmentsHorizontal as Settings2, IconLifebuoy as LifeBuoy, IconAdjustmentsHorizontal as SlidersHorizontal, IconHome as House, IconBell as Bell, IconInbox as Inbox, IconListCheck as ListChecks, IconSquareCheck as SquareCheckBig, IconLayoutDashboard as LayoutDashboard, IconChartBar as ChartNoAxesCombined, IconFolderOpen as FolderOpenDot } from '@sakaniui/react/icons';
 import {
   Avatar, Badge, Divider, HoverGroup, IconButton, SidebarDivider, SidebarFooter,
   SidebarGroupLabel, SidebarHeader, SidebarItem, SidebarPromo, SidebarSearch, Tooltip,
@@ -51,10 +46,11 @@ import { WorkspaceLogo } from './WorkspaceLogo';
 // Figma Avatar "Type=Image" default photo (node 86:339), exported at 2x.
 import avatarDefault from './avatar-default.jpg';
 import styles from './WorkspaceSidebar.module.css';
+import type { IconComponent } from '@sakaniui/react';
 
 /* ── Data (labels, icons and counts exactly as in Figma) ─────────────────── */
 
-const RAIL: Array<{ icon: LucideIcon; label: string }> = [
+const RAIL: Array<{ icon: IconComponent; label: string }> = [
   { icon: LayoutGrid, label: 'Dashboard' },
   { icon: Folder, label: 'Projects' },
   { icon: ListTodo, label: 'Tasks' },
@@ -65,13 +61,13 @@ const RAIL: Array<{ icon: LucideIcon; label: string }> = [
   { icon: PlugZap, label: 'Integrations' },
 ];
 
-const RAIL_UTILITIES: Array<{ icon: LucideIcon; label: string }> = [
+const RAIL_UTILITIES: Array<{ icon: IconComponent; label: string }> = [
   { icon: Settings2, label: 'Settings' },
   { icon: LifeBuoy, label: 'Help & docs' },
   { icon: SlidersHorizontal, label: 'Preferences' },
 ];
 
-const PRIMARY_NAV: Array<{ icon: LucideIcon; label: string; badge?: string }> = [
+const PRIMARY_NAV: Array<{ icon: IconComponent; label: string; badge?: string }> = [
   { icon: House, label: 'Home' },
   { icon: Bell, label: 'Updates', badge: '12' },
   { icon: Inbox, label: 'Inbox', badge: '20' },
@@ -81,7 +77,7 @@ const PRIMARY_NAV: Array<{ icon: LucideIcon; label: string; badge?: string }> = 
 /** Status dot color — one of the design system's solid status tokens. */
 type DotTone = 'info' | 'warning' | 'danger' | 'success';
 interface Row { label: string; count?: string; dot?: DotTone }
-interface Group { id: string; icon: LucideIcon; label: string; rows: Row[] }
+interface Group { id: string; icon: IconComponent; label: string; rows: Row[] }
 
 const WORKSPACE_GROUPS: Group[] = [
   { id: 'projects', icon: FolderKanban, label: 'Projects', rows: [
@@ -178,7 +174,7 @@ const RailTip: React.FC<{ title: string; subtitle?: string; children: React.Reac
   );
 };
 
-const RailItem: React.FC<{ icon: LucideIcon; label: string; active: boolean; onClick: () => void }> = ({
+const RailItem: React.FC<{ icon: IconComponent; label: string; active: boolean; onClick: () => void }> = ({
   icon, label, active, onClick,
 }) => (
   <RailTip title={label}>
