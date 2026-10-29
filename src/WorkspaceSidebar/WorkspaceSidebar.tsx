@@ -228,7 +228,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ defaultOpen 
       <aside className={styles.rail} aria-label="Workspace shortcuts">
         <div className={styles.railGroup}>
           <RailTip title="Sakani">
-            <span className={styles.mark} aria-hidden="true"><WorkspaceLogo tone="brand" size={32} /></span>
+            <span className={styles.mark} aria-hidden="true"><WorkspaceLogo tone="tile" size={32} /></span>
           </RailTip>
           <Divider className={styles.railDivider} />
           {RAIL.map(({ icon, label }) => (
